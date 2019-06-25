@@ -1,64 +1,89 @@
 "use strict";
 /// <reference types="Cypress" />
-context('Trial Assignment - Test 1: Change user profile', () => {
-	beforeEach(() => {
+
+context('Trial Assignment - Test 1', () => {
+	beforeEach( function() {
 		cy.fixture('login').as('profile')
 		cy.fixture('bio').as('bio')
-	})
 
-	it('1. Open discuss.flarum.org', () => {
-	    cy.clearCookies()
+		cy.clearCookies()
+
         cy.visit('http://discuss.flarum.org')
 	})
 
-	it('2. Login', function(){
-	    cy.get('.item-logIn').click()
+	it('Change user profile', function() {
+
+	    LogIn(this.profile.login, this.profile.password)
+
+        OpenProfile()
+
+        ChangeInfo(this.bio.description)
+
+        LogOut()
+
+	    LogIn(this.profile.login, this.profile.password)
+
+        OpenProfile()
+
+        VerifyInfo(this.bio.description)
+    })
+
+
+    function LogIn(log, pass) {
+        cy.get('.item-logIn')
+            .click() // opening login window
+
         cy.get('input[name=identification]')
-            .type(this.profile.login).should('have.value', this.profile.login)
+            .type(log)
+            .should('have.value', log)
+
         cy.get('input[name=password]')
-            .type(this.profile.password).should('have.value', this.profile.password)
-        cy.get('.Button.Button--primary.Button--block').click()
-        cy.get('.username').should('contain', this.profile.login)
-    })
+            .type(pass)
+            .should('have.value', pass)
 
-	it('3. Open user profile', () => {
-        cy.get('.SessionDropdown').click()
-        cy.get('.Dropdown-menu').contains("Profile").click()
-    })
+        cy.get('.Button.Button--primary.Button--block')
+            .click()
 
-    it('4. Change information about yourself', function() {
-         cy.get('.UserBio-content').click()
-         cy.wait(500)
-         cy.get('textarea.FormControl')
-            .clear()
-            .type(this.bio.description, { delay: 100 })
-         cy.get('.UserCard-identity').click()
-         cy.wait(500)
-         cy.get('.item-bio').contains(this.bio.description)
-    })
+        cy.get('.username')
+            .should('contain', log) // verifying we're logged in
+    }
 
-	it('5. Logout', () => {
-        cy.get('.SessionDropdown').click()
-        cy.get('.Dropdown-menu').contains("Log Out").click()
-    })
+    function OpenProfile() {
+        cy.get('.SessionDropdown')
+            .click() // opening menu
+        cy.get('.Dropdown-menu')
+            .contains("Profile")
+            .click() // clicking on profile
+    }
 
-	it('6. Login again', function(){
-	    cy.get('.item-logIn').click()
-        cy.get('input[name=identification]')
-            .type(this.profile.login).should('have.value', this.profile.login)
-        cy.get('input[name=password]')
-            .type(this.profile.password).should('have.value', this.profile.password)
-        cy.get('.Button.Button--primary.Button--block').click()
-        cy.get('.username').should('contain', this.profile.login)
-    })
+    function LogOut() {
+        cy.get('.SessionDropdown')
+            .click() // opening menu
+        cy.get('.Dropdown-menu')
+            .contains("Log Out")
+            .click() // clicking on log out
+    }
 
-   	it('7. Open user profile', () => {
-        cy.get('.SessionDropdown').click()
-        cy.get('.Dropdown-menu').contains("Profile").click()
-    })
 
-    it('8. Verify new information is displayed', function(){
-        cy.get('.item-bio').contains(this.bio.description)
-    })
+    function ChangeInfo(descr) {
+        cy.get('.UserBio-content')
+            .click() // activating form
+
+        cy.wait(500)
+        cy.get('textarea.FormControl')
+           .clear() // removing previous info
+           .type(descr, { delay: 100 })
+
+        cy.get('.UserCard-identity')
+            .click() // deactivating form and saving changes
+        cy.wait(500)
+
+    }
+
+
+    function VerifyInfo(descr) {
+        cy.get('.item-bio')
+            .contains(descr)
+    }
 
 })

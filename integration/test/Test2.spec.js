@@ -1,58 +1,87 @@
 "use strict";
 /// <reference types="Cypress" />
 
-context('Trial Assignment - Test 2: Post a reply', () => {
-	beforeEach(() => {
+context('Trial Assignment - Test 2', () => {
+	beforeEach( function() {
 		cy.fixture('login').as('profile')
 		cy.fixture('discuss').as('discuss')
-	})
 
-	it('1. Open discuss.flarum.org', () => {
-	    cy.clearCookies()
+		cy.clearCookies()
+
         cy.visit('http://discuss.flarum.org')
 	})
 
-	it('2. Login', function(){
+	it('Post a reply', function() {
 
-	    cy.get('.item-logIn').click()
+        LogIn(this.profile.login, this.profile.password)
+
+        OpenSandbox()
+
+        OpenDiscussion(this.discuss.title)
+
+        PostReply(this.discuss.title, this.discuss.description)
+
+        CorrectReload()
+
+        VerifyMessage(this.discuss.description)
+
+    })
+
+    function LogIn(log, pass) {
+        cy.get('.item-logIn')
+            .click() // opening login window
+
         cy.get('input[name=identification]')
-            .type(this.profile.login).should('have.value', this.profile.login)
+            .type(log)
+            .should('have.value', log)
+
         cy.get('input[name=password]')
-            .type(this.profile.password).should('have.value', this.profile.password)
-        cy.get('.Button.Button--primary.Button--block').click()
-        //cy.get('form').submit()
-            //.type('{enter}')
+            .type(pass)
+            .should('have.value', pass)
 
-        cy.get('.username').should('contain', this.profile.login)
+        cy.get('.Button.Button--primary.Button--block')
+            .click()
 
-    })
+        cy.get('.username')
+            .should('contain', log) // verifying we're logged in
+    }
 
-	it('3. Open discuss.flarum.org/t/sandbox', () => {
-       cy.get('.TagLinkButton.hasIcon').contains('Test Posting').click()
-    })
+    function OpenSandbox() {
+        cy.get('.TagLinkButton.hasIcon')
+            .contains('Test Posting')
+            .click()
+    }
 
-	it('4. Open a discussion with a certain title (should be configurable)', function(){
+    function OpenDiscussion(title) {
         cy.get('.DiscussionListItem-title')
-            .should('contain',this.discuss.title)
-            .first().click()
+            .contains(title)
+            .first().click() // it's possible to create some similar topics
+                             // so we use first one matching our conditions
+    }
 
-    })
-
-	it('5. Reply)', function(){
-        cy.get('.ReplyPlaceholder').should('contain','Write a Reply...')
+    function PostReply(title, descr) {
+        cy.get('.SplitDropdown-button.Button.Button--primary.hasIcon') // this button is available every time
             .click()
+
         cy.get('.FormControl.Composer-flexible')
-            .type(this.discuss.description)
-        cy.get('.Button.Button--primary.hasIcon').contains('Post Reply')
+            .type(descr)
+
+        cy.get('.Button.Button--primary.hasIcon')
+            .contains('Post Reply')
             .click()
-    })
+    }
 
-    it('6. Refresh page)', () => {
-         cy.reload()
-    })
+    function CorrectReload() {
+        cy.wait(500)
+        cy.reload()
+        cy.wait(500)
+    }
 
-   	it('7. Verify the reply is displayed', function(){
-        cy.get('.Post-body').contains(this.discuss.description)
-    })
+    function VerifyMessage(descr) {
+        cy.get('.Post-body')
+            .contains(descr)
+    }
 
 })
+
+
